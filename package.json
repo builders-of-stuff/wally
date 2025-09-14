@@ -57,6 +57,6 @@
     ]
   },
   "dependencies": {
-    "@builders-of-stuff/svelte-sui-wallet-adapter": "^1.2.7"
+    "@builders-of-stuff/svelte-sui-wallet-adapter": "^2.0.0"
   }
 }
