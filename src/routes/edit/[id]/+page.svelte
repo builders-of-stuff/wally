@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { BlogService } from '$lib/services/blog.svelte.js';
+  import { PostsService } from '$lib/posts/posts.service.svelte.js';
   import PostForm from '$lib/components/post-form.svelte';
   import { Button } from '$lib/components/ui/button/index.js';
   import type { BlogPost } from '$lib/types.js';
@@ -21,7 +21,7 @@
     }
 
     try {
-      const fetchedPost = await BlogService.getPost(postId);
+      const fetchedPost = await PostsService.getPost(postId);
       if (fetchedPost) {
         post = fetchedPost;
       } else {
@@ -41,7 +41,7 @@
     isSubmitting = true;
 
     try {
-      const updatedPost = await BlogService.updatePost(post.id, {
+      const updatedPost = await PostsService.updatePost(post.id, {
         title: data.title,
         body: data.body
       });

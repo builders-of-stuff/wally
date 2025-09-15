@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { BlogService } from '$lib/services/blog.svelte.js';
+  import { PostsService } from '$lib/posts/posts.service.svelte.js';
   import PostForm from '$lib/components/post-form.svelte';
 
   let isSubmitting = $state(false);
@@ -9,7 +9,7 @@
     isSubmitting = true;
 
     try {
-      const newPost = await BlogService.createPost(data);
+      const newPost = await PostsService.createPost(data);
       goto(`/post/${newPost.id}`);
     } catch (error) {
       console.error('Failed to create post:', error);

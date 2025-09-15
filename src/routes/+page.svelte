@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { BlogService } from '$lib/services/blog.svelte.js';
+  import { PostsService } from '$lib/posts/posts.service.svelte.js';
   import PostCard from '$lib/components/post-card.svelte';
   import { Button } from '$lib/components/ui/button/index.js';
   import type { BlogPost } from '$lib/types.js';
@@ -10,7 +10,7 @@
 
   onMount(async () => {
     try {
-      posts = await BlogService.getAllPosts();
+      posts = await PostsService.getAllPosts();
     } catch (error) {
       console.error('Failed to load posts:', error);
     } finally {

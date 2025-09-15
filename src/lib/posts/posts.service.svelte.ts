@@ -26,7 +26,7 @@ const mockPosts: BlogPost[] = [
   }
 ];
 
-export class BlogService {
+export class PostsService {
   static async getAllPosts(): Promise<BlogPost[]> {
     await new Promise((resolve) => setTimeout(resolve, 100));
     return [...mockPosts].sort(

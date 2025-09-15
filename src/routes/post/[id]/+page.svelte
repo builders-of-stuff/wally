@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/state';
   import { goto } from '$app/navigation';
-  import { BlogService } from '$lib/services/blog.svelte.js';
+  import { PostsService } from '$lib/posts/posts.service.svelte.js';
   import { Button } from '$lib/components/ui/button/index.js';
   import type { BlogPost } from '$lib/types.js';
 
@@ -19,7 +19,7 @@
     }
 
     try {
-      const fetchedPost = await BlogService.getPost(postId);
+      const fetchedPost = await PostsService.getPost(postId);
       if (fetchedPost) {
         post = fetchedPost;
       } else {
@@ -47,7 +47,7 @@
     if (!post || !confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const success = await BlogService.deletePost(post.id);
+      const success = await PostsService.deletePost(post.id);
       if (success) {
         goto('/');
       } else {
