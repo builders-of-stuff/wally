@@ -1,5 +1,5 @@
 import type { BlogPost, CreatePostData, UpdatePostData } from '$lib/types.js';
-import { createPost } from '$lib/shared/contract.tools.svelte.js';
+import { createPost, updatePost, deletePost } from '$lib/shared/contract.tools.svelte.js';
 import { testnetWalletAdapter } from '@builders-of-stuff/svelte-sui-wallet-adapter';
 
 const mockPosts: BlogPost[] = [
@@ -80,28 +80,75 @@ export class PostsService {
   }
 
   static async updatePost(id: string, data: UpdatePostData): Promise<BlogPost | null> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    if (!testnetWalletAdapter?.currentAccount?.address) {
+      throw new Error(
+        'Wallet not connected. Please connect your wallet to update a post.'
+      );
+    }
 
-    const postIndex = mockPosts.findIndex((post) => post.id === id);
-    if (postIndex === -1) return null;
+    const existingPost = mockPosts.find((post) => post.id === id);
+    if (!existingPost) {
+      throw new Error('Post not found');
+    }
 
-    const updatedPost = {
-      ...mockPosts[postIndex],
-      ...data,
-      updatedAt: new Date()
-    };
+    if (existingPost.author !== testnetWalletAdapter.currentAccount.address) {
+      throw new Error('You can only update your own posts');
+    }
 
-    mockPosts[postIndex] = updatedPost;
-    return updatedPost;
+    try {
+      const title = data.title ?? existingPost.title;
+      const body = data.body ?? existingPost.body;
+
+      const txResult = await updatePost(id, title, body);
+
+      if (!txResult) {
+        throw new Error('Failed to update post on blockchain');
+      }
+
+      const updatedPost = {
+        ...existingPost,
+        ...data,
+        updatedAt: new Date()
+      };
+
+      const postIndex = mockPosts.findIndex((post) => post.id === id);
+      mockPosts[postIndex] = updatedPost;
+      return updatedPost;
+    } catch (error) {
+      console.error('Blockchain updatePost failed:', error);
+      throw new Error('Failed to update post on blockchain. Please try again.');
+    }
   }
 
   static async deletePost(id: string): Promise<boolean> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    if (!testnetWalletAdapter?.currentAccount?.address) {
+      throw new Error(
+        'Wallet not connected. Please connect your wallet to delete a post.'
+      );
+    }
 
-    const postIndex = mockPosts.findIndex((post) => post.id === id);
-    if (postIndex === -1) return false;
+    const existingPost = mockPosts.find((post) => post.id === id);
+    if (!existingPost) {
+      throw new Error('Post not found');
+    }
 
-    mockPosts.splice(postIndex, 1);
-    return true;
+    if (existingPost.author !== testnetWalletAdapter.currentAccount.address) {
+      throw new Error('You can only delete your own posts');
+    }
+
+    try {
+      const txResult = await deletePost(id);
+
+      if (!txResult) {
+        throw new Error('Failed to delete post on blockchain');
+      }
+
+      const postIndex = mockPosts.findIndex((post) => post.id === id);
+      mockPosts.splice(postIndex, 1);
+      return true;
+    } catch (error) {
+      console.error('Blockchain deletePost failed:', error);
+      throw new Error('Failed to delete post on blockchain. Please try again.');
+    }
   }
 }
