@@ -3,7 +3,7 @@
   import { page } from '$app/stores';
   import {
     ConnectButton,
-    devnetWalletAdapter as walletAdapter
+    testnetWalletAdapter as walletAdapter
   } from '@builders-of-stuff/svelte-sui-wallet-adapter';
 </script>
 

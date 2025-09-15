@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { BlogService } from '$lib/services/blog.js';
+  import { BlogService } from '$lib/services/blog.svelte.js';
   import PostForm from '$lib/components/post-form.svelte';
 
   let isSubmitting = $state(false);
@@ -13,7 +13,10 @@
       goto(`/post/${newPost.id}`);
     } catch (error) {
       console.error('Failed to create post:', error);
-      throw error;
+      // Re-throw with user-friendly message
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error occurred';
+      throw new Error(errorMessage);
     } finally {
       isSubmitting = false;
     }

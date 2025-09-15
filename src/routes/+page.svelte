@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { BlogService } from '$lib/services/blog.js';
+  import { BlogService } from '$lib/services/blog.svelte.js';
   import PostCard from '$lib/components/post-card.svelte';
   import { Button } from '$lib/components/ui/button/index.js';
   import type { BlogPost } from '$lib/types.js';

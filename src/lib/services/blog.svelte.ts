@@ -1,4 +1,6 @@
 import type { BlogPost, CreatePostData, UpdatePostData } from '$lib/types.js';
+import { createPost } from '$lib/shared/contract.tools.svelte.js';
+import { testnetWalletAdapter } from '@builders-of-stuff/svelte-sui-wallet-adapter';
 
 const mockPosts: BlogPost[] = [
   {
@@ -45,18 +47,36 @@ export class BlogService {
   }
 
   static async createPost(data: CreatePostData): Promise<BlogPost> {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    if (!testnetWalletAdapter?.currentAccount?.address) {
+      throw new Error(
+        'Wallet not connected. Please connect your wallet to create a post.'
+      );
+    }
 
-    const newPost: BlogPost = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: data.title,
-      body: data.body,
-      author: data.author,
-      publishedAt: new Date()
-    };
+    try {
+      // Create post on blockchain
+      const txResult = await createPost(data.title, data.body);
 
-    mockPosts.push(newPost);
-    return newPost;
+      if (!txResult) {
+        throw new Error('Failed to create post on blockchain');
+      }
+
+      // Create the BlogPost object to return
+      const newPost: BlogPost = {
+        id: txResult.digest || Math.random().toString(36).substring(2, 9),
+        title: data.title,
+        body: data.body,
+        author: data.author,
+        publishedAt: new Date()
+      };
+
+      // Also add to mock posts for now (until we have blockchain reading)
+      mockPosts.push(newPost);
+      return newPost;
+    } catch (error) {
+      console.error('Blockchain createPost failed:', error);
+      throw new Error('Failed to create post on blockchain. Please try again.');
+    }
   }
 
   static async updatePost(id: string, data: UpdatePostData): Promise<BlogPost | null> {

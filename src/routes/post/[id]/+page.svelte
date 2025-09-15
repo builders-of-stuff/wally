@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import { BlogService } from '$lib/services/blog.js';
+  import { BlogService } from '$lib/services/blog.svelte.js';
   import { Button } from '$lib/components/ui/button/index.js';
   import type { BlogPost } from '$lib/types.js';
 
