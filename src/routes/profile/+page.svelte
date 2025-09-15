@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { PostsService } from '$lib/posts/posts.service.svelte.js';
+  import { postsStore } from '$lib/posts/posts.store.svelte.js';
   import PostCard from '$lib/components/post-card.svelte';
   import { Button } from '$lib/components/ui/button/index.js';
   import type { BlogPost } from '$lib/types.js';
@@ -12,7 +12,7 @@
 
   onMount(async () => {
     try {
-      posts = await PostsService.getPostsByAuthor(currentUser);
+      posts = await postsStore.loadPostsByAuthor(currentUser);
     } catch (error) {
       console.error('Failed to load user posts:', error);
     } finally {
