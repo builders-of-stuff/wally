@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Button } from '$lib/components/ui/button/index.js';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import {
     ConnectButton,
     testnetWalletAdapter as walletAdapter

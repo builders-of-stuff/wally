@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { goto } from '$app/navigation';
   import { BlogService } from '$lib/services/blog.svelte.js';
   import { Button } from '$lib/components/ui/button/index.js';
@@ -11,7 +11,7 @@
   let notFound = $state(false);
 
   onMount(async () => {
-    const postId = $page.params.id;
+    const postId = page.params.id;
     if (!postId) {
       notFound = true;
       loading = false;
