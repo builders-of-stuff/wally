@@ -10,6 +10,25 @@ import {
 } from '$lib/shared/contract.tools.svelte.js';
 import { PACKAGE_ID } from '$lib/shared/contract.constants';
 
+// Type definition for Move Post struct JSON format from Sui GraphQL
+interface MovePostJson {
+  id: {
+    id: string;
+  };
+  title: string;
+  body: string;
+  author: string;
+  published_at: string; // u64 as string
+  updated_at: string;   // u64 as string
+}
+
+// Helper function to convert u64 timestamp (in seconds) to JavaScript Date
+function convertTimestampToDate(timestampStr: string): Date {
+  const timestamp = parseInt(timestampStr, 10);
+  // Convert from seconds to milliseconds for JavaScript Date
+  return new Date(timestamp * 1000);
+}
+
 // https://docs.sui.io/guides/developer/getting-started/graphql-rpc
 // https://docs.sui.io/guides/developer/getting-started/graphql-rpc
 // All posts state
@@ -106,14 +125,6 @@ export class PostsStore {
         }
       `);
 
-      // const query = graphql(`
-      //   query {
-      //     epoch {
-      //       referenceGasPrice
-      //     }
-      //   }
-      // `);
-
       const result = await gqlClient.query({
         query,
         variables: {
@@ -126,35 +137,57 @@ export class PostsStore {
 
       console.log('GQL Result:', result);
 
-      // Mock posts data (until blockchain reading is implemented)
-      const mockPosts: BlogPost[] = [
-        {
-          id: '1',
-          title: 'Welcome to Our Blog',
-          body: 'This is the first post on our decentralized blog platform. We use Sui blockchain for data management and Walrus for storage. This post showcases the basic functionality of our blogging platform.',
-          author: '0x1234567890abcdef',
-          publishedAt: new Date('2024-01-15T10:30:00Z')
-        },
-        {
-          id: '2',
-          title: 'Building with Sui and Walrus',
-          body: 'In this post, we explore the benefits of building decentralized applications using Sui blockchain and Walrus storage. The combination provides scalability, security, and decentralization.',
-          author: '0x1234567890abcdef',
-          publishedAt: new Date('2024-01-20T14:15:00Z')
-        },
-        {
-          id: '3',
-          title: 'The Future of Content Publishing',
-          body: 'Decentralized content publishing represents a paradigm shift in how we think about content ownership and distribution. With blockchain technology, creators maintain true ownership of their work.',
-          author: '0xabcdef1234567890',
-          publishedAt: new Date('2024-01-25T09:45:00Z')
-        }
-      ];
+      // Parse posts from GraphQL response
+      const posts: BlogPost[] = [];
 
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      this.allPosts = [...mockPosts].sort(
+      if (!result.data) {
+        throw new Error('GraphQL query returned no data');
+      }
+
+      if (result.data?.objects?.edges) {
+        for (const edge of result.data.objects.edges) {
+          try {
+            const node = edge.node;
+            const moveObject = node?.asMoveObject;
+            const contents = moveObject?.contents;
+            const json = contents?.json;
+
+            if (json && typeof json === 'object') {
+              const movePost = json as MovePostJson;
+
+              // Validate required fields
+              if (movePost.title && movePost.body && movePost.author && movePost.published_at) {
+                const blogPost: BlogPost = {
+                  id: node.address, // Use object address as post ID
+                  title: movePost.title,
+                  body: movePost.body,
+                  author: movePost.author,
+                  publishedAt: convertTimestampToDate(movePost.published_at)
+                };
+
+                // Add updatedAt if the timestamp is non-zero
+                if (movePost.updated_at && movePost.updated_at !== '0') {
+                  blogPost.updatedAt = convertTimestampToDate(movePost.updated_at);
+                }
+
+                posts.push(blogPost);
+              }
+            }
+          } catch (parseError) {
+            console.warn('Failed to parse post from GraphQL response:', parseError);
+            // Continue processing other posts even if one fails
+          }
+        }
+      } else {
+        console.log('No posts found in GraphQL response');
+      }
+
+      // Sort posts by publication date (newest first)
+      this.allPosts = posts.sort(
         (a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()
       );
+
+      console.log(`Successfully loaded ${posts.length} posts from blockchain`);
     } catch (error) {
       console.error('Failed to load posts:', error);
       this.error = 'Failed to load posts. Please try again.';
