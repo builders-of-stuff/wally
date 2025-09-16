@@ -1,6 +1,26 @@
-import type { BlogPost, CreatePostData, UpdatePostData } from '$lib/types.js';
-import { createPost, updatePost, deletePost } from '$lib/shared/contract.tools.svelte.js';
+import { SuiGraphQLClient } from '@mysten/sui/graphql';
+import { graphql } from '@mysten/sui/graphql/schemas/latest';
 import { testnetWalletAdapter } from '@builders-of-stuff/svelte-sui-wallet-adapter';
+
+import type { BlogPost, CreatePostData, UpdatePostData } from '$lib/types.js';
+import {
+  createPost,
+  updatePost,
+  deletePost
+} from '$lib/shared/contract.tools.svelte.js';
+import { PACKAGE_ID } from '$lib/shared/contract.constants';
+
+// https://docs.sui.io/guides/developer/getting-started/graphql-rpc
+// https://docs.sui.io/guides/developer/getting-started/graphql-rpc
+// All posts state
+//
+const gqlClient = new SuiGraphQLClient({
+  // works
+  url: 'https://sui-testnet.mystenlabs.com/graphql'
+
+  // does not work
+  // url: 'https://graphql.testnet.sui.io/graphql'
+});
 
 export class PostsStore {
   // All posts state
@@ -69,6 +89,43 @@ export class PostsStore {
     this.error = null;
 
     try {
+      const query = graphql(`
+        query GetPosts($first: Int, $filter: ObjectFilter!) {
+          objects(first: $first, filter: $filter) {
+            edges {
+              node {
+                address
+                asMoveObject {
+                  contents {
+                    json
+                  }
+                }
+              }
+            }
+          }
+        }
+      `);
+
+      // const query = graphql(`
+      //   query {
+      //     epoch {
+      //       referenceGasPrice
+      //     }
+      //   }
+      // `);
+
+      const result = await gqlClient.query({
+        query,
+        variables: {
+          first: 10,
+          filter: {
+            type: `${PACKAGE_ID}::posts::Post`
+          }
+        }
+      });
+
+      console.log('GQL Result:', result);
+
       // Mock posts data (until blockchain reading is implemented)
       const mockPosts: BlogPost[] = [
         {
@@ -137,7 +194,7 @@ export class PostsStore {
   }
 
   getPost(id: string): BlogPost | undefined {
-    return this.allPosts.find(post => post.id === id);
+    return this.allPosts.find((post) => post.id === id);
   }
 
   addPost(post: BlogPost) {
@@ -151,7 +208,7 @@ export class PostsStore {
   }
 
   updatePostInStore(updatedPost: BlogPost) {
-    const index = this.allPosts.findIndex(post => post.id === updatedPost.id);
+    const index = this.allPosts.findIndex((post) => post.id === updatedPost.id);
     if (index !== -1) {
       this.allPosts[index] = updatedPost;
     }
@@ -159,7 +216,7 @@ export class PostsStore {
     // Update author posts cache if it exists
     const authorPosts = this.authorPosts.get(updatedPost.author);
     if (authorPosts) {
-      const authorIndex = authorPosts.findIndex(post => post.id === updatedPost.id);
+      const authorIndex = authorPosts.findIndex((post) => post.id === updatedPost.id);
       if (authorIndex !== -1) {
         authorPosts[authorIndex] = updatedPost;
       }
@@ -167,17 +224,17 @@ export class PostsStore {
   }
 
   removePost(id: string) {
-    const postIndex = this.allPosts.findIndex(post => post.id === id);
+    const postIndex = this.allPosts.findIndex((post) => post.id === id);
     if (postIndex !== -1) {
       const removedPost = this.allPosts[postIndex];
-      this.allPosts = this.allPosts.filter(post => post.id !== id);
+      this.allPosts = this.allPosts.filter((post) => post.id !== id);
 
       // Update author posts cache if it exists
       const authorPosts = this.authorPosts.get(removedPost.author);
       if (authorPosts) {
         this.authorPosts.set(
           removedPost.author,
-          authorPosts.filter(post => post.id !== id)
+          authorPosts.filter((post) => post.id !== id)
         );
       }
     }
@@ -328,7 +385,10 @@ export class PostsStore {
       }
     } catch (error) {
       console.error('Failed to create post:', error);
-      this.error = error instanceof Error ? error.message : 'Failed to create post. Please try again.';
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to create post. Please try again.';
       return null;
     } finally {
       this.isCreating = false;
@@ -395,7 +455,10 @@ export class PostsStore {
       }
     } catch (error) {
       console.error('Failed to update post:', error);
-      this.error = error instanceof Error ? error.message : 'Failed to update post. Please try again.';
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to update post. Please try again.';
       return null;
     } finally {
       this.isUpdating = false;
@@ -451,7 +514,10 @@ export class PostsStore {
       }
     } catch (error) {
       console.error('Failed to delete post:', error);
-      this.error = error instanceof Error ? error.message : 'Failed to delete post. Please try again.';
+      this.error =
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete post. Please try again.';
       return false;
     } finally {
       this.isDeleting = false;

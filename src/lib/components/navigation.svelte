@@ -22,14 +22,14 @@
           <a
             href="/"
             class="text-muted-foreground transition-colors hover:text-card-foreground"
-            class:text-card-foreground={$page.route.id === '/'}
+            class:text-card-foreground={page.route.id === '/'}
           >
             Home
           </a>
           <a
             href="/profile"
             class="text-muted-foreground transition-colors hover:text-card-foreground"
-            class:text-card-foreground={$page.route.id === '/profile'}
+            class:text-card-foreground={page.route.id === '/profile'}
           >
             Profile
           </a>

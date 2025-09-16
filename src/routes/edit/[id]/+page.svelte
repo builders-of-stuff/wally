@@ -13,7 +13,7 @@
   let isSubmitting = $state(false);
 
   onMount(async () => {
-    const postId = $page.params.id;
+    const postId = page.params.id;
     if (!postId) {
       notFound = true;
       loading = false;
