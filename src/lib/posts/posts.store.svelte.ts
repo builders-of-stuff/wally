@@ -19,7 +19,7 @@ interface MovePostJson {
   body: string;
   author: string;
   published_at: string; // u64 as string
-  updated_at: string;   // u64 as string
+  updated_at: string; // u64 as string
 }
 
 // Helper function to convert u64 timestamp (in seconds) to JavaScript Date
@@ -34,10 +34,10 @@ function convertTimestampToDate(timestampStr: string): Date {
 // All posts state
 //
 const gqlClient = new SuiGraphQLClient({
-  // works
+  // works (alpha)
   url: 'https://sui-testnet.mystenlabs.com/graphql'
 
-  // does not work
+  // does not work (beta)
   // url: 'https://graphql.testnet.sui.io/graphql'
 });
 
@@ -156,7 +156,12 @@ export class PostsStore {
               const movePost = json as MovePostJson;
 
               // Validate required fields
-              if (movePost.title && movePost.body && movePost.author && movePost.published_at) {
+              if (
+                movePost.title &&
+                movePost.body &&
+                movePost.author &&
+                movePost.published_at
+              ) {
                 const blogPost: BlogPost = {
                   id: node.address, // Use object address as post ID
                   title: movePost.title,
